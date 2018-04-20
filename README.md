@@ -19,7 +19,7 @@ Prerequisites
 
 * To build this project you must use Maven 3.x. If you do not have Maven already installed on your machine you will need to install it. To do so, check out the [git downloads page](http://git-scm.com/downloads).
 
-* For deployment of the Java app, you can use whatever web container/application server you prefer. We use [Tomcat](http://tomcat.apache.org/) to validate that the application will start up correctly.
+* The Java application uses the [Spring Boot](https://projects.spring.io/spring-boot/) framework. You can run it as a plain Java application. You do not need to install a servlet engine.
 
 Instructions
 ------------

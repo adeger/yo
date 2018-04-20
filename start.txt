@@ -26,6 +26,11 @@ mysql>CREATE DATABASE yo;
 Run the application
 $ mvn spring-boot:run
 
+If you want to run without Maven: 
+$ java -jar target/yo-1.2.3-SNAPSHOT.jar \
+    -Dserver.port=80 \
+    -Dspring.datasource.url=jdbc:mysql://127.0.0.1:3306/yo
+
 Test application:
 
 $ curl -v 'localhost:8080/v1/user/add?name=First&email=someemail@someemailprovider.com'
