@@ -25,10 +25,10 @@ Instructions
 ------------
 
 DO:
-* Clone this repo from Github to your local machine.
-* Build the Java code using `mvn package`. This will produce a jar file in the target`folder. 
+* Fork and clone this repo from Github to your local machine.
+* Build the Java code using `mvn package`. This will produce a jar file in the `target/` folder. 
 * Deploy the jar using the cloud provider. 
-* Provision a MySQL database
+* Provision a MySQL database.
 * Provision a reverse-proxy in front of the Java application. 
 * Automate as much of the deployment to the cloud provider as you can using whatever tools you are most comfortable with.
 * Write a smoke-test script to ensure that after deploy the application is running.
@@ -38,16 +38,13 @@ DO:
     * Screenshots of any cloud provider configuration (ie. firewall settings, vpcs, etc.)
     * Pointers to help us review your code
 * SEND US A PULL REQUEST to the Github project or zip up your working folder with your notes and scripts.
-* Leave your environment running. Provide us with login information for the servers. Either send us a username/password, provide us with private key files, or add our SSH keys (see the attached authorized_keys`file)
+* Leave your environment running. Provide us with login information for the servers. Either send us a username/password, provide us with private key files, or add our SSH keys (see the attached authorized_keys`file).
 
 DO NOT: 
-* Edit the Java code
-* Pay for computing resources
+* Edit the Java code.
+* Pay for computing resources.
     * We recommend you use the free tier of one of the major cloud providers: Amazon, Azure or Google Cloud.
 * Spend more than 4 hours on this. 
-
-
-Please be sure to return your work to us using the following tips:
 
 Good luck!
 
