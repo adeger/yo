@@ -35,10 +35,10 @@ DO:
 * Follow best practices, this your opportunity to demonstrate your knowledge.
 * Provide comments and documentation as if we were doing an ops review on your code/work. Please be sure to include the following:
     * Description of the deployed system architecture
-    * Screenshots of any cloud provider configuration (ie. firewall settings, vpcs, etc.)
+    * Screenshots of any cloud provider configuration (ie. firewall settings, VPCs, etc.)
     * Pointers to help us review your code
 * SEND US A PULL REQUEST to the Github project or zip up your working folder with your notes and scripts.
-* Leave your environment running. Provide us with login information for the servers. Either send us a username/password, provide us with private key files, or add our SSH keys (see the attached authorized_keys`file).
+* Leave your environment running. Provide us with login information for the servers. Either send us a username/password, provide us with private key files, or add our SSH keys (see the attached `authorized_keys` file).
 
 DO NOT: 
 * Edit the Java code.
