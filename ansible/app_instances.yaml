@@ -1,0 +1,41 @@
+---
+# TODO and Caution: Idempotency broken which should be working based on count_tax and
+# exact_count ec2 properties
+
+- name: Configure yo app EC2 Instances (does not include database, bastion hosts, firewall)
+  hosts: localhost
+  connection: local
+  
+#volumes:
+#        - device_name: /dev/sda1
+#          volume_size: {{ volume-size }}    
+#
+  vars:
+    - yo_role: yo_app
+  
+  - name: Launch EC2 instance(s) in zone1
+    tags:
+      - create
+    ec2: 
+      instance_type: "{{ aws_instance_type}}"
+      image: "{{ aws_ami }}"
+      region: "{{ aws_region }}"
+      keypair: "{{ aws_app_instance_pem }}"
+      count_tag: "{{ item.count_tag }}"
+      exact_count: "{{ item.count }}"
+      group_id: "{{ aws_app_security_group_id }}"
+      group: "{{ aws_app_security_group }}"
+      vpc_subnet_id: "{{ item.vpc_subnet_priv }}"
+      instance_tags:
+        Role: "{{ yo_role }}"
+        Name: Yo app server 
+        CountTag: "{{ item.count_tag }}"
+      zone: "{{ item.az }}"
+      # next option is overrided by subnet allocate phys ip prop
+      assign_public_ip: no
+      #state: present  # exlusive from exact_count
+      #wait: true
+      #volumes: "{{volumes}}"
+      #instance_profile_name={{ aws_app_instance_profile_name }}
+    register: ec2
+    loop: "{{ aws_zones }}"

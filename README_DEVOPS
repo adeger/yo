@@ -1,0 +1,226 @@
+SETTING UP
+==========
+Source (don't execute directly) the initialize.sh file.  For the first 
+time add the "--with_vault" flag to set up an Ansible password file.
+Don't look here for the password.  It's only available "out of band".
+
+All other passwords/sensitive information are in the ./security/yo-vault 
+file in a free form. Other passwords were migrated to this file from the start.txt
+file.  Also in the yo-vault file are Amazon environment bash exports that
+need to be run before executing aws utility and Ansible EC2 manipulation
+playbooks.  It'll be sort of obvious what to do with them.
+
+N.B., the initialize.sh file was tested only under Centos 7.  Ansible didn't 
+seem to like being installed under a virtualenv so it wasn't.  Most other python 
+stuff was ok with it and was installed using a VE (pyvirtual directory).  Sourcing
+the initialize.sh file also takes care of all of this and the virtulenv can
+be exited with the customary "deactivate" command.
+
+Very little luck setting this stuff up under Cygwin.  You've been warned.
+Ansible was kinda lousy under under Cygwin also since, at least until
+recently, one had to add verbage to the ansible.cfg file to turn off SSH
+control channels.
+
+The yo_user is part of a yo_admin group in AWS with appropriate (and somewhat
+god-like) permissions.  Console and programmatic access has been granted
+to the user/group and, as menioned, the programmatic credentials are in 
+the yo-vault file.
+
+The user for all of the EC2 instances is ec2-user.  The AWS generated private 
+key (as pem file) is in the yo-vault.
+
+ANSIBLE AND OTHER AUTOMATION
+=============================
+So much to automate, so little time...
+
+The yo app, as it is, was set up as a staging application but with some thought
+(at least from the Ansible side) as to how this might scale out for test
+and prod environments.  The ansible group_vars files for blank/nada for 
+the test and prod inventories.
+
+Ansible inventory directory structure is architected according to one of
+the Ansible best practice strategies and goes something like:
+
+inventory/test/others TBD as for stage
+         /stage/hosts (file, not needed so far)
+               /group_vars/all
+                           localhost
+                           etcetera
+         /prod/others TBD as for stage
+ 
+
+Poor man's dynamic inventory (on the yo app instances) is effected by doing 
+EC2 instance queries in the playbooks and/or roles.  See the TODO list about
+migrating this to Ansible's Dynamic Inventory stategy.
+
+As to what's automated here's what is:
+  * Start of work environment initialization automation in initialization.sh
+  * Start of web app instance automation in Ansible
+  * Start of bastion host automation in Ansible
+  * An aborted attempt to automate DB setup in RDS (not used as it turns
+    out but kept in case needed later)
+  * A quickie for adding bastion access rules in security/add_bastion*.sh
+
+
+Major points as to what has to be done:
+  * Ansible and ssh configuration for deploying using the bastion host
+    as an ssh relay
+  * Adding docker and any other container requirements to the webapp
+    instances
+  * Delivery and (re)deploy stuff to the webapp instances
+  * Database setup and maintenance automation
+  * Stuff needed for making environment set up turn-key such as:
+     * AWS networking and security automation
+     * dev and prod Ansible inventory stuff
+     * Possible Ansible dynamic inventory stuff
+
+DOCKER
+========
+It is common for production software delivery pipelines to bundle software intside 
+containers for too many reasons to enumerate here. Containers should be bundled
+as part of the build process and which is usually triggered by commits to the VCS.
+Docker artifact are best stored in a public or private Docker repository 
+(such as Dockerhub).  
+
+This exercise isn't really about the creation and delivery of Docker 
+images, but more about familiarity with devops automation concepts. However
+here are a few notes about how images were prepared for running under Amazon
+
+Source images and the build steps for the yo Spring application are contained
+in the Dockerfile  The source image is an Alpine Linux distro pre-loaded 
+with Java 8 runtime.  No logging was implemented although that would be 
+a good thing to do.  The app was configured to write  to the /home/youser/yo.log
+file so, if trouble, the file can be inspected by visiting the Docker host node
+of the container and doing a "docker cp"-ish command to bring out from the
+container for examination.  Update: for demonstration since there were 
+problems with running the Spring jar in production a yo-1.2.3-SNAPSHOT.py
+file running Flask was adapted and coded up.
+
+
+CHOICE OF CLOUD PLATFORM AND ARCHITECTURE
+===========================================
+For demonstrating devops principles and based on familiarity, I deployed
+this app (hereafter, "yo") using AWS.  Of the three most common/simple 
+services offered by Amazon (Elastic Beanstalk, "bare" EC2, Elastic 
+Container Services) I chose installation on bare EC2 instances.
+After Dockerization, the app wouldn't run using Docker's "bridge" driver
+but would using the "host" driver--which is not supported on Elastic
+Beanstalk. ECS would probably be a workable choice since it does support
+host mode networking but I'm not that familiar and that time thing.
+
+
+A simple representation of the simple architectue is shown below:
+
+                          _ _  _  
+                      _  /   )(  )_  
+  ----------         ( )-          ) __
+  | Mgmt   |        /    Public     (  \
+  | Infr   |______ (      Cloud        |
+  |_______ |        (_________________/
+                  /          |
+	         /           |
+     ___________/       ___________         
+     | Bastion  |       |   Fire   | 
+     |   Host   |       |   Wall   |
+     ------------       ------------
+               \             |
+                \         _ _| _  
+                 \    _  /   )(  )_  
+                  \  ( )-          ) __
+                   \/    Private    (  \
+                   (      Cloud        |
+                    (_________________/
+                   /        |         \
+                  /         |          \
+      ___________/       ___|_______    \___________     
+      | Yo App   |       | Yo App   |    |  Data   |
+      |   Host   |       |   Host   |    |  Base   |
+      |__________|       |__________|    |_________|
+     
+
+As mentioned, the yo app instances are EC2 instances as is 
+the single firewall instance.  The yo app instance creation
+is automated with an appropriately named Ansible job.  The 
+job is designed to be idempotent as far as maintaing the number 
+of instances (currently one each in two availability zones of
+Amazon's us-west-2 region).  Testing showed there might be
+a bug in Ansible's tag-based instance count idempotency).
+
+The bastion host instance is straightforward and set up as
+an Ansible playbook.  It's ip address is (currently 
+54.213.59.121) and DNS name ec2-54-213-59-121.us-west-2.compute.amazonaws.com).
+The bastion server has authorized_keys copied to it and
+can access other (more ephemeral) servers using the yo-1 key
+as the identity file.  Automation of pushing the authorized keys
+to all/new servers would be worthwhile.
+
+The database is an EC2 MySQL server.  Amazon RDS service seems
+promising (automatic snapshotting, cross region replication, etc)
+but is an extra cost option.
+
+EC2 instances are tagged with appropriate Role (yo_app, bastion, etc)
+and Name tag values.  The Role tag is used by Ansible for dynamic
+host querying.
+
+A bunch of stuff still outstanding for the EC2 environment including
+clamping down access as much as possible only to the bastion host
+and possibly re-locating the webapps to a public subnet because of
+kooky EC2 requirements (gotten around at the last minute using
+Elastic IP addresses which is probably not really how you want 
+to do it in the long run)
+
+DOCKER CONTAINERS
+=================
+As mentioned, the application (such as it is) is running on the yo app web servers
+within a Docker container. The Dockerfile is really the best documentation for how 
+a container is built so not too much to elaborate on that.  
+
+Here's the rub though: the Spring app would in no way shape or form (know-able to yours truly
+at least) run as a jar file contacting a remote database server (db on localhost was ok). I was
+remiss for not writing down the exact top level stack trace message but it was something with
+the (paraphrased) verbage of "No packets have been received in the last 0 milliseconds...".  
+Note that this was even before the app was Dockerized AND...AND a netcat (nc) command to 
+the db server on port 3306 received a login prompt from the server.  
+
+The Docker container is run with the following command and arguments.  Note use of the
+'host' Dockerr network driver:
+
+   sudo docker run -p 8080:8080 -d -e DB_SERVER=172.31.3.51 --net=host yo-py:latest
+
+So since that wasn't working and, not to come up empty handed, I coded up a quick Python Flask
+web service that minimally satisfies the curl commands test in the start.txt file.  The original 
+service probably does much more than that...but mine doesn't! 
+
+
+SECURITY
+========= 
+When the app doesn't do much security demands are diminished...one 
+supposes.  Port 80 traffic only so no fussing with certs, PPKs and
+ciphers, etc.
+
+Password protection started using Ansible vault.  With only a little
+jiggering this could accommodate something like a Jenkins build
+pipeline.  One or two bare passwords in Ansible need to be 
+migrated to a vault/encrypted vars file.
+
+As a nod to security the bastion host limits access to a potentially
+scalable set of app servers.  It's public IP address is:
+
+        54.213.59.121    
+
+at least until the box gets torn down and rebuilt.
+Bastion server is locked down pretty well.  After adding credential
+environmental variables from the security/yo-vault file, the
+security/add_bastion_ingress_cidr.sh utility can be used to add
+a single or larger CIDR range to the security policy.  Use the
+-h switch on the utility for help (obvious).
+
+
+SITE
+===============================================================
+Site is at http://yo-spring-dev-11617100.us-west-2.elb.amazonaws.com
+
+Again, the app only responds to the limited calls shown in the start.txt
+file (e.g., http://yo-spring-dev-11617100.us-west-2.elb.amazonaws.com/v1/user/list).
+
+A simple smoke test can be run using smoke_test.py

@@ -1,0 +1,50 @@
+'''Quickie smoke test for the yo site'''
+
+import unittest
+import requests
+import random
+
+SITE_BASE = "http://yo-spring-dev-11617100.us-west-2.elb.amazonaws.com"
+SITE_LIST_URL = SITE_BASE + "/v1/user/list"
+SITE_ADD_URL_TEMPLATE = SITE_BASE + "add?name=%s&email=%s" 
+
+
+def rand_str(length):
+    result = ''
+
+    char_index = range(65, 91) + range(97, 123)
+    random.seed()
+
+    for i in range(0, length): 
+        r = random.randrange(len(char_index))
+        print ('r', r)
+        print 'char_index: ', char_index[r]
+        result += unichr(char_index[r])
+    return result
+
+for i in range(0, 5):
+    print rand_str(i)
+
+class TestSite(unittest.TestCase):
+    def test_list(self):
+        resp = requests.get(SITE_LIST_URL) 
+
+        self.assertEqual(resp.status_code, 200)
+
+        # next will raise an error if we don't get json
+        resp.json()
+        print random.choices()
+
+    def test_add(self):
+        resp = requests.get(SITE_LIST_URL) 
+        json = resp.json()
+        self.assertTrue(False)
+
+
+    def test_404(self):
+        resp = requests.get(SITE_BASE)
+        self.assertEqual(resp.status_code, 404)
+
+
+if __name__ == '__main__':
+    unittest.main()

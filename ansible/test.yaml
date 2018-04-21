@@ -1,0 +1,26 @@
+---
+
+- name: Test some stuff
+  hosts: localhost
+  connection: local
+
+
+  tasks:
+#     - name: task1a
+#       debug: 
+#         msg: "z1.priv {{ aws_zones.zone1.vpc_subnet_priv }}"
+#
+#     - name: task1b
+#       debug: 
+#         msg: "z1.pub {{ aws_zones.zone1.vpc_subnet_pub }}"
+#
+#     - name: task1c
+#       debug: 
+#         msg: "z1.az {{ aws_zones.zone1.az }}"
+
+     - name: Launch EC2 instance(s) in zone1
+       tags:
+         - create
+       debug: 
+         msg: "{{ item.count_tag }}  {{ item.count }} {{ item.vpc_subnet_priv }}"
+       loop: "{{ aws_zones }}"

@@ -1,0 +1,32 @@
+---
+# tasks file for yo_service
+- debug:
+    msg: "ec2 var is {{ aws_region }}"
+
+# Basic mysql provisioning example
+- rds:
+    command: create
+    instance_name: yo
+    db_engine: MySQL
+    size: 20
+    instance_type: db.t2.micro
+    aws_region: "{{ aws_region }}"
+    instance_name: west2-db
+    license_model: general-public-license
+    username: root
+    password: MyNewPass 
+    tags:
+      Environment: "{{aws_environment}}"
+      Server: database
+
+- rds:
+    command: facts
+    region: '{{ aws_region }}'
+
+#   instance_name: '{{ source_rds_instance_name  }}'
+
+#- ec2_instance_facts:
+#    filters:
+#      "tag:Environment": "{{aws_environment}}"
+#      "tag:Server": database
+    

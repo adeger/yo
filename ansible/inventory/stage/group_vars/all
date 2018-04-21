@@ -1,0 +1,31 @@
+---
+env: stage
+name: yo_app
+aws_region: us-west-2
+aws_app_instance_count: 2
+aws_environment: stage
+aws_instance_type: t2.micro
+aws_ami: ami-d874e0a0
+
+# TODO: autogenerate remaining
+aws_bastion_security_group: sg-ef245891
+
+aws_app_instance_pem: yo-1
+#aws_app_instance_profile_name: 
+aws_app_security_group_id: sg-a37237dd
+aws_app_security_group: yo_app_instance_stage_sg
+
+aws_zones:
+  - zone1:
+    vpc_subnet_priv: subnet-d14ded9a 
+    vpc_subnet_pub: subnet-6b50f020
+    az: us-west-2a
+    count_tag: stage_z1_app
+    count: 1
+  
+  - zone2:
+    vpc_subnet_priv: subnet-09038570 
+    vpc_subnet_pub: subnet-1603856f
+    az: us-west-2b
+    count_tag: stage_z2_app
+    count: 1

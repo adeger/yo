@@ -1,0 +1,49 @@
+---
+- hosts: localhost
+  vars:
+    - yo_role: bastion
+
+  tasks:
+    - name: Count number of bastion instances
+      ec2_instance_facts:
+        filters: 
+          #instance-id: i-01abd412133b761b2
+          #"tag:Role:": "{{ yo_role }}"
+          "tag:Role": "{{ yo_role}}"
+      register: yo_bastions
+
+    - name: Count number of bastion instances that are terminated
+      ec2_instance_facts:
+        filters: 
+          instance-state-name: terminated
+          "tag:Role": "{{ yo_role }}"
+      register: yo_termed_bastions
+
+    - name: Change into a stringy number
+      set_fact: 
+        bastions_count: "{{ yo_bastions.instances|length - yo_termed_bastions.instances|length}}" 
+
+    - debug:
+        msg: "bastions: {{ yo_bastions.instances|length }} termed: {{yo_termed_bastions.instances|length}} remaining: {{ bastions_count}}"
+
+    - block:
+      - debug:
+          msg: "Quitting since there are {{ bastions_count }} bastions already"
+      - meta: end_play
+      when: bastions_count|int > 0
+
+    - ec2:
+        key_name: "{{ aws_app_instance_pem }}"
+        group_id: "{{ aws_bastion_security_group }}"
+        region: "{{ aws_region }}"
+        instance_type: t2.micro
+        image: ami-d874e0a0
+        wait: yes
+        wait_timeout: 500
+        count: 1
+        instance_tags:
+           Role: bastion
+           Name: Bastion server
+        monitoring: yes
+        vpc_subnet_id: subnet-1603856f
+        assign_public_ip: yes

@@ -18,15 +18,19 @@ $ mysqld --initialize
 $ brew services start mysql
 $ mysql -u root -p
 
-mysql>ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass'
-mysql>CREATE USER 'youser'@'%' IDENTIFIED BY 'yoimcool';
+mysql>ALTER USER 'root'@'localhost' IDENTIFIED BY '==in yo-vault file=='
+mysql>CREATE USER 'youser'@'%' IDENTIFIED BY '==in yo-vault file==';
 mysql>GRANT ALL PRIVILEGES ON *.* TO 'youser'@'%' WITH GRANT OPTION;
+mysql># wouldn't work on some mysqls without the next two also
+mysql>CREATE USER 'youser'@'localhost' IDENTIFIED BY '==in yo-vault file==';
+mysql>GRANT ALL PRIVILEGES ON *.* TO 'youser'@'localhost' WITH GRANT OPTION;
 mysql>CREATE DATABASE yo;
 
 Run the application
 $ mvn spring-boot:run
 
 If you want to run without Maven: 
+mvn package
 $ java -jar target/yo-1.2.3-SNAPSHOT.jar \
     -Dserver.port=80 \
     -Dspring.datasource.url=jdbc:mysql://127.0.0.1:3306/yo
@@ -35,3 +39,7 @@ Test application:
 
 $ curl -v 'localhost:8080/v1/user/add?name=First&email=someemail@someemailprovider.com'
 $ curl -v 'localhost:8080/v1/user/list'
+
+Less verbosely and pastable:
+curl 'localhost:8080/v1/user/add?name=First&email=someemail@someemailprovider.com'
+curl 'localhost:8080/v1/user/list' ; echo
