@@ -1,6 +1,7 @@
 ---
 env: stage
 name: yo_app
+app_role: yo_app
 aws_region: us-west-2
 aws_app_instance_count: 2
 aws_environment: stage
@@ -29,3 +30,6 @@ aws_zones:
     az: us-west-2b
     count_tag: stage_z2_app
     count: 1
+
+ansible_ssh_user: ec2-user
+ansible_ssh_user_key_file : ssh/id_rsa_aws_ec2

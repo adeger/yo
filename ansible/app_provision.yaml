@@ -1,0 +1,55 @@
+---
+- name: Provision yo app EC2 Instances (does not include database, bastion hosts, firewall)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  
+  tags: provision
+  vars:
+    - yo_role: "{{ app_role }}"
+  tasks: 
+    - name: Find yo_app ec2 instances
+      ec2_instance_facts:
+        region: "{{ aws_region }}"
+        filters: 
+          "tag:Role": yo_app
+          "instance-state-name": running
+      register: found
+
+    # name: List ip addresses
+    - set_fact:
+        yo_app_ips: "{{ found|json_query('instances[*].network_interfaces[0].private_ip_address') }}"
+    
+    - name:
+      debug:
+        msg: "{{ yo_app_ips }}"
+      
+      
+- name: Configure hosts docker
+  #hosts: tag_Role_{{ host_vars[localhost].yo_role }}
+  #hosts: "{{ $host_vars[localhost].yo_app_ips }}"
+  hosts: tag_Role_yo_app
+  tags: provision
+  sudo: true
+  tasks:
+    #- name: debug
+    #  debug: 
+    #    msg: "{{ play_hosts }}"
+
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+        update_cache: yes
+        
+    - name: set up service
+      service:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Install curl
+      yum:
+        name: curl
+        state: present
+        update_cache: no

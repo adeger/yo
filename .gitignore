@@ -4,6 +4,7 @@ target
 .settings
 pyvirtual
 *.swp
+*.retry
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

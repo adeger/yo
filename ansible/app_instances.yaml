@@ -5,14 +5,12 @@
 - name: Configure yo app EC2 Instances (does not include database, bastion hosts, firewall)
   hosts: localhost
   connection: local
+  gather_facts: false
   
-#volumes:
-#        - device_name: /dev/sda1
-#          volume_size: {{ volume-size }}    
-#
+  tags: create
   vars:
-    - yo_role: yo_app
-  
+    - yo_role: "{{ app_role }}"
+  tasks: 
   - name: Launch EC2 instance(s) in zone1
     tags:
       - create
@@ -21,7 +19,8 @@
       image: "{{ aws_ami }}"
       region: "{{ aws_region }}"
       keypair: "{{ aws_app_instance_pem }}"
-      count_tag: "{{ item.count_tag }}"
+      count_tag: 
+        CountTag: "{{ item.count_tag }}"
       exact_count: "{{ item.count }}"
       group_id: "{{ aws_app_security_group_id }}"
       group: "{{ aws_app_security_group }}"
@@ -32,10 +31,12 @@
         CountTag: "{{ item.count_tag }}"
       zone: "{{ item.az }}"
       # next option is overrided by subnet allocate phys ip prop
-      assign_public_ip: no
+      assign_public_ip: yes
       #state: present  # exlusive from exact_count
       #wait: true
       #volumes: "{{volumes}}"
       #instance_profile_name={{ aws_app_instance_profile_name }}
     register: ec2
     loop: "{{ aws_zones }}"
+
+#- import_playbook: app_provision.yaml

@@ -1,45 +1,24 @@
 ---
 - hosts: localhost
-  vars:
-    - yo_role: bastion
+  connection: local
+  gather_facts: false
 
   tasks:
-    - name: Count number of bastion instances
+    - name: Find bastion instances
       ec2_instance_facts:
+        region: "{{ aws_region }}"
         filters: 
-          #instance-id: i-01abd412133b761b2
-          #"tag:Role:": "{{ yo_role }}"
-          "tag:Role": "{{ yo_role}}"
-      register: yo_bastions
-
-    - name: Count number of bastion instances that are terminated
-      ec2_instance_facts:
-        filters: 
-          instance-state-name: terminated
-          "tag:Role": "{{ yo_role }}"
-      register: yo_termed_bastions
-
-    - name: Change into a stringy number
-      set_fact: 
-        bastions_count: "{{ yo_bastions.instances|length - yo_termed_bastions.instances|length}}" 
-
-    - debug:
-        msg: "bastions: {{ yo_bastions.instances|length }} termed: {{yo_termed_bastions.instances|length}} remaining: {{ bastions_count}}"
-
-    - block:
-      - debug:
-          msg: "Quitting since there are {{ bastions_count }} bastions already"
-      - meta: end_play
-      when: bastions_count|int > 0
+          "tag:Role": bastion
+      register: found
 
     - ec2:
         key_name: "{{ aws_app_instance_pem }}"
-        group_id: "{{ aws_bastion_security_group }}"
+        group: bastion
         region: "{{ aws_region }}"
         instance_type: t2.micro
         image: ami-d874e0a0
         wait: yes
-        wait_timeout: 500
+        wait_timeout: 600
         count: 1
         instance_tags:
            Role: bastion
@@ -47,3 +26,27 @@
         monitoring: yes
         vpc_subnet_id: subnet-1603856f
         assign_public_ip: yes
+      when: 
+        - found is defined
+        - found.instances|length < 1
+          
+
+    #- name: get bastion host
+    #  debug:
+    #    msg: "{{ found }}"
+
+- hosts: tag_Role_bastion
+  user: ec2-user
+  tasks:
+    - name: Add .ssh directory
+      file: 
+        path: /home/ec2-user/.ssh
+        state: directory
+        owner: ec2-user
+        mode: 0700
+
+    - name: Push authorized_hosts for ec2-user
+      copy:
+        src: files/{{ env }}_authorized_keys
+        dest: /home/ec2-user/.ssh/authorized_keys
+        mode: 0600
